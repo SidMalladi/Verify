@@ -572,8 +572,8 @@ public class LoaderDBActivity extends AppCompatActivity {
                     };
 
                     for (String contentUriPrefix : contentUriPrefixesToTry) {
-                        Uri contentUri = ContentUris.withAppendedId(Uri.parse(contentUriPrefix), Long.valueOf(id));
                         try {
+                            Uri contentUri = ContentUris.withAppendedId(Uri.parse(contentUriPrefix), Long.valueOf(id));
                             String path = getDataColumn(context, contentUri, null, null);
                             if (path != null) {
                                 return path;
