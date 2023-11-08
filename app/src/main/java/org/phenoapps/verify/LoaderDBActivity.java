@@ -539,7 +539,6 @@ public class LoaderDBActivity extends AppCompatActivity {
 
     public static String getPath(final Context context, final Uri uri){
         String absolutePath = getLocalPath(context, uri);
-        Log.d("debug 1", "getPath: "+absolutePath);
         return absolutePath != null ? absolutePath : uri.toString();
     }
 
@@ -548,7 +547,6 @@ public class LoaderDBActivity extends AppCompatActivity {
     public static String getLocalPath(final Context context , Uri uri) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            Log.d("authority", "getLocalPath: "+uri.getAuthority());
             if (DocumentsContract.isDocumentUri(context, uri)) {
 
                 if ("com.android.externalstorage.documents".equals(uri.getAuthority())) {
