@@ -52,6 +52,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -553,9 +554,6 @@ public class MainActivity extends AppCompatActivity {
 
     private synchronized void askUserExportFileName() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Choose name for exported file.");
-        final EditText input = new EditText(this);
 
         final Calendar c = Calendar.getInstance();
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -564,78 +562,76 @@ public class MainActivity extends AppCompatActivity {
         if (lastDot != -1) {
             mFileName = mFileName.substring(0, lastDot);
         }
-        input.setText(mFileName + "_" + sdf.format(c.getTime()));
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
 
-        builder.setPositiveButton("Export", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String value = input.getText().toString();
-                if (!value.isEmpty()) {
-                    if (isExternalStorageWritable()) {
-                        try {
-                            File verifyDirectory = new File(getExternalFilesDir(null).getPath() + "/Verify");
-                            final File output = new File(verifyDirectory, value + ".csv");
-                            final FileOutputStream fstream = new FileOutputStream(output);
-                            final SQLiteDatabase db = mDbHelper.getReadableDatabase();
-                            final String table = IdEntryContract.IdEntry.TABLE_NAME;
-                            final Cursor cursor = db.query(table, null, null, null, null, null, null);
-                            //final Cursor cursor = db.rawQuery("SElECT * FROM VERIFY", null);
+        final Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.setType("*/*");
+        i.putExtra(Intent.EXTRA_TITLE, mFileName + "_" + sdf.format(c.getTime())+".csv");
+        startActivityForResult(Intent.createChooser(i, "Choose folder to export file."), VerifyConstants.PICK_CUSTOM_DEST);
 
-                            //first write header line
-                            final String[] headers = cursor.getColumnNames();
+    }
+
+    public void writeToExportPath(Uri uri){
+
+        String value = mFileName;
+
+        if (!value.isEmpty()) {
+            if (isExternalStorageWritable()) {
+                try {
+                    final File output = new File(uri.getPath());
+                    final OutputStream fstream = getContentResolver().openOutputStream(uri);
+                    final SQLiteDatabase db = mDbHelper.getReadableDatabase();
+                    final String table = IdEntryContract.IdEntry.TABLE_NAME;
+                    final Cursor cursor = db.query(table, null, null, null, null, null, null);
+                    //final Cursor cursor = db.rawQuery("SElECT * FROM VERIFY", null);
+
+                    //first write header line
+                    final String[] headers = cursor.getColumnNames();
+                    for (int i = 0; i < headers.length; i++) {
+                        if (i != 0) fstream.write(",".getBytes());
+                        fstream.write(headers[i].getBytes());
+                    }
+                    fstream.write(line_separator.getBytes());
+                    //populate text file with current database values
+                    if (cursor.moveToFirst()) {
+                        do {
                             for (int i = 0; i < headers.length; i++) {
                                 if (i != 0) fstream.write(",".getBytes());
-                                fstream.write(headers[i].getBytes());
+                                final String val = cursor.getString(
+                                        cursor.getColumnIndexOrThrow(headers[i])
+                                );
+                                if (val == null) fstream.write("null".getBytes());
+                                else fstream.write(val.getBytes());
                             }
                             fstream.write(line_separator.getBytes());
-                            //populate text file with current database values
-                            if (cursor.moveToFirst()) {
-                                do {
-                                    for (int i = 0; i < headers.length; i++) {
-                                        if (i != 0) fstream.write(",".getBytes());
-                                        final String val = cursor.getString(
-                                                cursor.getColumnIndexOrThrow(headers[i])
-                                        );
-                                        if (val == null) fstream.write("null".getBytes());
-                                        else fstream.write(val.getBytes());
-                                    }
-                                    fstream.write(line_separator.getBytes());
-                                } while (cursor.moveToNext());
-                            }
+                        } while (cursor.moveToNext());
+                    }
 
-                            cursor.close();
-                            fstream.flush();
-                            fstream.close();
-                            scanFile(MainActivity.this, output);
+                    cursor.close();
+                    fstream.flush();
+                    fstream.close();
+                    scanFile(MainActivity.this, output);
                             /*MediaScannerConnection.scanFile(MainActivity.this, new String[] {output.toString()}, null, new MediaScannerConnection.OnScanCompletedListener() {
                                 @Override
                                 public void onScanCompleted(String path, Uri uri) {
                                     Log.v("scan complete", path);
                                 }
                             });*/
-                        } catch (SQLiteException e) {
-                            e.printStackTrace();
-                            Toast.makeText(MainActivity.this, "Error exporting file, is your table empty?", Toast.LENGTH_SHORT).show();
-                        } catch (FileNotFoundException e) {
-                            e.printStackTrace();
-                        } catch (IOException io) {
-                            io.printStackTrace();
-                        }
-                    } else {
-                        Toast.makeText(MainActivity.this,
-                                "External storage not writable.", Toast.LENGTH_SHORT).show();
-                    }
-                } else {
-                    Toast.makeText(MainActivity.this,
-                            "Must enter a file name.", Toast.LENGTH_SHORT).show();
+                } catch (SQLiteException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this, "Error exporting file, is your table empty?", Toast.LENGTH_SHORT).show();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException io) {
+                    io.printStackTrace();
                 }
+            } else {
+                Toast.makeText(MainActivity.this,
+                        "External storage not writable.", Toast.LENGTH_SHORT).show();
             }
-        });
-
-        builder.show();
-
+        } else {
+            Toast.makeText(MainActivity.this,
+                    "Must enter a file name.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     //returns index of table with identifier = id, returns -1 if not found
@@ -766,6 +762,9 @@ public class MainActivity extends AppCompatActivity {
 
             if (intent != null) {
                 switch (requestCode) {
+                    case VerifyConstants.PICK_CUSTOM_DEST:
+                        writeToExportPath(intent.getData());
+                        break;
                     case VerifyConstants.DEFAULT_CONTENT_REQ:
                         Intent i = new Intent(this, LoaderDBActivity.class);
                         i.setData(intent.getData());

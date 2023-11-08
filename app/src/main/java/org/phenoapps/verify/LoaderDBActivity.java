@@ -539,6 +539,7 @@ public class LoaderDBActivity extends AppCompatActivity {
 
     public static String getPath(final Context context, final Uri uri){
         String absolutePath = getLocalPath(context, uri);
+        Log.d("debug 1", "getPath: "+absolutePath);
         return absolutePath != null ? absolutePath : uri.toString();
     }
 
@@ -547,18 +548,29 @@ public class LoaderDBActivity extends AppCompatActivity {
     public static String getLocalPath(final Context context , Uri uri) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-
+            Log.d("authority", "getLocalPath: "+uri.getAuthority());
             if (DocumentsContract.isDocumentUri(context, uri)) {
 
                 if ("com.android.externalstorage.documents".equals(uri.getAuthority())) {
                     final String[] doc =  DocumentsContract.getDocumentId(uri).split(":");
                     final String documentType = doc[0];
-
+                    
                     if ("primary".equalsIgnoreCase(documentType)) {
                         return Environment.getExternalStorageDirectory() + "/" + doc[1];
+                        }
+                } else if ("com.android.providers.media.documents".equals(uri.getAuthority()) ||
+                        "com.google.android.apps.docs.storage".equals(uri.getAuthority()) ||
+                        "com.microsoft.skydrive.content.StorageAccessProvider".equals(uri.getAuthority())) {
+                    String fileName = getFileName(context, uri);
+                    File cacheDir = getDocumentCacheDir(context);
+                    File file = generateFileName(fileName, cacheDir);
+                    String destinationPath = null;
+                    if (file != null) {
+                        destinationPath = file.getAbsolutePath();
+                        saveFileFromUri(context, uri, destinationPath);
                     }
-                }
-                else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
+                    return destinationPath;
+                } else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
                     final String id = DocumentsContract.getDocumentId(uri);
                     if (!id.isEmpty()) {
                         if (id.startsWith("raw:")) {
@@ -589,7 +601,6 @@ public class LoaderDBActivity extends AppCompatActivity {
                         destinationPath = file.getAbsolutePath();
                         saveFileFromUri(context, uri, destinationPath);
                     }
-                    Log.d("res", "getLocalPath: "+ destinationPath);
                     return destinationPath;
                 }
             }
