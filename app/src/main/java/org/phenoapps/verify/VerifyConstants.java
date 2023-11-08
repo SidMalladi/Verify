@@ -15,6 +15,7 @@ class VerifyConstants {
     final static int CAMERA_INTENT_REQ = 102;
     final static int SETTINGS_INTENT_REQ = 103;
     final static int DEFAULT_CONTENT_REQ = 104;
+    final static int PICK_CUSTOM_DEST = 105;
 
     //extras
     final static String CSV_URI = "org.phenoapps.verify.CSV_URI";
