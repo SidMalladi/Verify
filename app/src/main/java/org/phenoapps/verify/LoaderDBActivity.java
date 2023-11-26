@@ -1,27 +1,16 @@
 package org.phenoapps.verify;
 
-import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.provider.DocumentsContract;
-import android.provider.OpenableColumns;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -38,18 +27,15 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
 import java.util.Iterator;
-
-import org.phenoapps.verify.R;
+import java.util.Objects;
 
 public class LoaderDBActivity extends AppCompatActivity {
 
@@ -58,7 +44,6 @@ public class LoaderDBActivity extends AppCompatActivity {
     private Uri mFileUri;
     private String mDelimiter;
     private String mFileExtension;
-    private String mFilePath;
     private String mFileName;
 
     private Workbook mCurrentWorkbook;
@@ -110,7 +95,8 @@ public class LoaderDBActivity extends AppCompatActivity {
 
         mFileUri = getIntent().getData();
 
-        int lastSlash = mFileUri.getPath().lastIndexOf('/');
+        assert mFileUri != null;
+        int lastSlash = Objects.requireNonNull(mFileUri.getPath()).lastIndexOf('/');
         if (lastSlash != -1) {
             mFileName = mFileUri.getPath().substring(lastSlash + 1);
         } else mFileName = "";
@@ -140,8 +126,10 @@ public class LoaderDBActivity extends AppCompatActivity {
 
         try {
             //query file path type
-            mFilePath = getPath(LoaderDBActivity.this ,mFileUri);
-            int lastDot = mFilePath.toString().lastIndexOf("."); // changed from mFileUri to mFilePath due to the files in download folder have URI without extension
+//            mFilePath = getPath(LoaderDBActivity.this ,mFileUri);
+            UriHandler uriWorker = new UriHandler();
+            String mFilePath = uriWorker.getPath(LoaderDBActivity.this, mFileUri);
+            int lastDot = mFilePath.lastIndexOf("."); // changed from mFileUri to mFilePath due to the files in download folder have URI without extension
 
             if (lastDot == -1) {
                 Toast.makeText(this, "Imported file must have an extension. (e.g: .csv, .tsv)", Toast.LENGTH_LONG).show();
@@ -523,6 +511,7 @@ public class LoaderDBActivity extends AppCompatActivity {
         if (mFileUri != null)
             outState.putString(VerifyConstants.CSV_URI, mFileUri.toString());
     }
+    //comment
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -535,190 +524,5 @@ public class LoaderDBActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    public static String getPath(final Context context, final Uri uri){
-        String absolutePath = getLocalPath(context, uri);
-        return absolutePath != null ? absolutePath : uri.toString();
-    }
-
-
-    //based on https://github.com/iPaulPro/aFileChooser/blob/master/aFileChooser/src/com/ipaulpro/afilechooser/utils/FileUtils.java
-    public static String getLocalPath(final Context context , Uri uri) {
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-
-            if (DocumentsContract.isDocumentUri(context, uri)) {
-
-                if ("com.android.externalstorage.documents".equals(uri.getAuthority())) {
-                    final String[] doc =  DocumentsContract.getDocumentId(uri).split(":");
-                    final String documentType = doc[0];
-
-                    if ("primary".equalsIgnoreCase(documentType)) {
-                        return Environment.getExternalStorageDirectory() + "/" + doc[1];
-                    }
-                }
-                else if ("com.android.providers.downloads.documents".equals(uri.getAuthority())) {
-                    final String id = DocumentsContract.getDocumentId(uri);
-                    if (!id.isEmpty()) {
-                        if (id.startsWith("raw:")) {
-                            return id.replaceFirst("raw:", "");
-                        }
-                    }
-                    String[] contentUriPrefixesToTry = new String[]{
-                            "content://downloads/public_downloads",
-                            "content://downloads/my_downloads",
-                            "content://downloads/all_downloads"
-                    };
-
-                    for (String contentUriPrefix : contentUriPrefixesToTry) {
-                        try {
-                            Uri contentUri = ContentUris.withAppendedId(Uri.parse(contentUriPrefix), Long.valueOf(id));
-                            String path = getDataColumn(context, contentUri, null, null);
-                            if (path != null) {
-                                return path;
-                            }
-                        } catch (Exception e) {}
-                    }
-
-                    String fileName = getFileName(context, uri);
-                    File cacheDir = getDocumentCacheDir(context);
-                    File file = generateFileName(fileName, cacheDir);
-                    String destinationPath = null;
-                    if (file != null) {
-                        destinationPath = file.getAbsolutePath();
-                        saveFileFromUri(context, uri, destinationPath);
-                    }
-                    Log.d("res", "getLocalPath: "+ destinationPath);
-                    return destinationPath;
-                }
-            }
-            else if ("file".equalsIgnoreCase(uri.getScheme())) {
-                return uri.getPath();
-            } else if ("com.estrongs.files".equals(uri.getAuthority())) {
-                return uri.getPath();
-            }
-        }
-        return null;
-    }
-
-    public static String getFileName(@NonNull Context context, Uri uri) {
-        String mimeType = context.getContentResolver().getType(uri);
-        String fileName = null;
-
-        if (mimeType == null && context != null) {
-            String path = getPath(context, uri);
-            if (path == null) {
-                fileName = getName(uri.toString());
-            } else {
-                File file = new File(path);
-                fileName = file.getName();
-            }
-        } else {
-            Cursor returnCursor = context.getContentResolver().query(uri, null,
-                    null, null, null);
-            if (returnCursor != null) {
-                int nameIndex = returnCursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
-                returnCursor.moveToFirst();
-                fileName = returnCursor.getString(nameIndex);
-                returnCursor.close();
-            }
-        }
-
-        return fileName;
-    }
-
-    public static String getName(String fileName) {
-        if (fileName == null) {
-            return null;
-        }
-        int index = fileName.lastIndexOf('/');
-        return fileName.substring(index + 1);
-    }
-
-    public static File getDocumentCacheDir(@NonNull Context context) {
-        File dir = new File(context.getCacheDir(), "documents");
-        if (!dir.exists()) {
-            dir.mkdirs();
-        }
-        return dir;
-    }
-
-    public static File generateFileName(@Nullable String name, File directory) {
-        if (name == null) {
-            return null;
-        }
-
-        File file = new File(directory, name);
-
-        if (file.exists()) {
-            String fileName = name;
-            String extension = "";
-            int dotIndex = name.lastIndexOf('.');
-            if (dotIndex > 0) {
-                fileName = name.substring(0, dotIndex);
-                extension = name.substring(dotIndex);
-            }
-
-            int index = 0;
-
-            while (file.exists()) {
-                index++;
-                name = fileName + '(' + index + ')' + extension;
-                file = new File(directory, name);
-            }
-        }
-
-        try {
-            if (!file.createNewFile()) {
-                return null;
-            }
-        } catch (IOException e) {
-            return null;
-        }
-
-        return file;
-    }
-
-    private static void saveFileFromUri(Context context, Uri uri, String destinationPath) {
-        InputStream uriInputStream = null;
-        BufferedOutputStream bufferStream = null;
-        try {
-            uriInputStream = context.getContentResolver().openInputStream(uri);
-            bufferStream = new BufferedOutputStream(new FileOutputStream(destinationPath, false));
-            byte[] buf = new byte[1024];
-            uriInputStream.read(buf);
-            do {
-                bufferStream.write(buf);
-            } while (uriInputStream.read(buf) != -1);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (uriInputStream != null) uriInputStream.close();
-                if (bufferStream != null) bufferStream.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    public static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
-
-        Cursor cursor = null;
-        final String column = "_data";
-        final String[] projection = { column };
-        try {
-            cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                final int index = cursor.getColumnIndexOrThrow(column);
-                return cursor.getString(index);
-            }
-        } finally {
-            if (cursor != null)
-                cursor.close();
-        }
-        return null;
     }
 }
