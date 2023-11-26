@@ -554,9 +554,6 @@ public class MainActivity extends AppCompatActivity {
 
     private synchronized void askUserExportFileName() {
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Choose name for exported file.");
-        final EditText input = new EditText(this);
 
         final Calendar c = Calendar.getInstance();
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -566,10 +563,8 @@ public class MainActivity extends AppCompatActivity {
             mFileName = mFileName.substring(0, lastDot);
 
         }
-        input.setText(mFileName + "_" + sdf.format(c.getTime()));
-        input.setInputType(InputType.TYPE_CLASS_TEXT);
-        builder.setView(input);
 
+<<<<<<< HEAD
        builder.setPositiveButton("Export", new DialogInterface.OnClickListener() {
            @Override
            public void onClick(DialogInterface dialogInterface, int which) {
@@ -590,14 +585,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void writeToExportPath(){
+=======
+        final Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        i.setType("*/*");
+        i.putExtra(Intent.EXTRA_TITLE, mFileName + "_" + sdf.format(c.getTime())+".csv");
+        startActivityForResult(Intent.createChooser(i, "Choose folder to export file."), VerifyConstants.PICK_CUSTOM_DEST);
+
+    }
+
+    public void writeToExportPath(Uri uri){
+
+>>>>>>> fab014c80c44d0454a178542018304ccc2d18e40
         String value = mFileName;
 
         if (!value.isEmpty()) {
             if (isExternalStorageWritable()) {
                 try {
+<<<<<<< HEAD
                     File verifyDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/Verify");
                     final File output = new File(verifyDirectory, value + ".csv");
                     final FileOutputStream fstream = new FileOutputStream(output);
+=======
+                    final File output = new File(uri.getPath());
+                    final OutputStream fstream = getContentResolver().openOutputStream(uri);
+>>>>>>> fab014c80c44d0454a178542018304ccc2d18e40
                     final SQLiteDatabase db = mDbHelper.getReadableDatabase();
                     final String table = IdEntryContract.IdEntry.TABLE_NAME;
                     final Cursor cursor = db.query(table, null, null, null, null, null, null);
@@ -635,6 +646,7 @@ public class MainActivity extends AppCompatActivity {
                                     Log.v("scan complete", path);
                                 }
                             });*/
+<<<<<<< HEAD
                 }catch (NullPointerException npe){
                     npe.printStackTrace();
                     Toast.makeText(this, "Error in opening the Specified file", Toast.LENGTH_LONG).show();
@@ -647,6 +659,16 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException io) {
                     io.printStackTrace();
                 }
+=======
+                } catch (SQLiteException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this, "Error exporting file, is your table empty?", Toast.LENGTH_SHORT).show();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+>>>>>>> fab014c80c44d0454a178542018304ccc2d18e40
             } else {
                 Toast.makeText(MainActivity.this,
                         "External storage not writable.", Toast.LENGTH_SHORT).show();
@@ -655,6 +677,7 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this,
                     "Must enter a file name.", Toast.LENGTH_SHORT).show();
         }
+<<<<<<< HEAD
     }
 
     public void writeToExportPath(Uri uri){
@@ -728,6 +751,8 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(MainActivity.this,
                     "Must enter a file name.", Toast.LENGTH_SHORT).show();
         }
+=======
+>>>>>>> fab014c80c44d0454a178542018304ccc2d18e40
     }
 
     //returns index of table with identifier = id, returns -1 if not found
