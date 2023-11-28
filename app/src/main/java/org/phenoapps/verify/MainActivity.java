@@ -554,6 +554,9 @@ public class MainActivity extends AppCompatActivity {
 
     private synchronized void askUserExportFileName() {
 
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Choose name for exported file.");
+        final EditText input = new EditText(this);
 
         final Calendar c = Calendar.getInstance();
         final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
@@ -561,18 +564,107 @@ public class MainActivity extends AppCompatActivity {
         int lastDot = mFileName.lastIndexOf('.');
         if (lastDot != -1) {
             mFileName = mFileName.substring(0, lastDot);
+
         }
+        input.setText(mFileName + "_" + sdf.format(c.getTime()));
+        input.setInputType(InputType.TYPE_CLASS_TEXT);
+        builder.setView(input);
 
-        final Intent i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        i.setType("*/*");
-        i.putExtra(Intent.EXTRA_TITLE, mFileName + "_" + sdf.format(c.getTime())+".csv");
-        startActivityForResult(Intent.createChooser(i, "Choose folder to export file."), VerifyConstants.PICK_CUSTOM_DEST);
+       builder.setPositiveButton("Export", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialogInterface, int which) {
+               String value = input.getText().toString();
+               mFileName = value;
+               final Intent i;
+               if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                   i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                   i.setType("*/*");
+                   i.putExtra(Intent.EXTRA_TITLE, value+".csv");
+                   startActivityForResult(Intent.createChooser(i, "Choose folder to export file."), VerifyConstants.PICK_CUSTOM_DEST);
+               }else{
+                   writeToExportPath();
+               }
+           }
+       });
+       builder.show();
+    }
 
+    public void writeToExportPath(){
+        String value = mFileName;
+
+        if (!value.isEmpty()) {
+            if (isExternalStorageWritable()) {
+                try {
+                    File verifyDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/Verify");
+                    final File output = new File(verifyDirectory, value + ".csv");
+                    final FileOutputStream fstream = new FileOutputStream(output);
+                    final SQLiteDatabase db = mDbHelper.getReadableDatabase();
+                    final String table = IdEntryContract.IdEntry.TABLE_NAME;
+                    final Cursor cursor = db.query(table, null, null, null, null, null, null);
+                    //final Cursor cursor = db.rawQuery("SElECT * FROM VERIFY", null);
+
+                    //first write header line
+                    final String[] headers = cursor.getColumnNames();
+                    for (int i = 0; i < headers.length; i++) {
+                        if (i != 0) fstream.write(",".getBytes());
+                        fstream.write(headers[i].getBytes());
+                    }
+                    fstream.write(line_separator.getBytes());
+                    //populate text file with current database values
+                    if (cursor.moveToFirst()) {
+                        do {
+                            for (int i = 0; i < headers.length; i++) {
+                                if (i != 0) fstream.write(",".getBytes());
+                                final String val = cursor.getString(
+                                        cursor.getColumnIndexOrThrow(headers[i])
+                                );
+                                if (val == null) fstream.write("null".getBytes());
+                                else fstream.write(val.getBytes());
+                            }
+                            fstream.write(line_separator.getBytes());
+                        } while (cursor.moveToNext());
+                    }
+
+                    cursor.close();
+                    fstream.flush();
+                    fstream.close();
+                    scanFile(MainActivity.this, output);
+                            /*MediaScannerConnection.scanFile(MainActivity.this, new String[] {output.toString()}, null, new MediaScannerConnection.OnScanCompletedListener() {
+                                @Override
+                                public void onScanCompleted(String path, Uri uri) {
+                                    Log.v("scan complete", path);
+                                }
+                            });*/
+                }catch (NullPointerException npe){
+                    npe.printStackTrace();
+                    Toast.makeText(this, "Error in opening the Specified file", Toast.LENGTH_LONG).show();
+                }
+                catch (SQLiteException e) {
+                    e.printStackTrace();
+                    Toast.makeText(MainActivity.this, "Error exporting file, is your table empty?", Toast.LENGTH_SHORT).show();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+            } else {
+                Toast.makeText(MainActivity.this,
+                        "External storage not writable.", Toast.LENGTH_SHORT).show();
+            }
+        } else {
+            Toast.makeText(MainActivity.this,
+                    "Must enter a file name.", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void writeToExportPath(Uri uri){
 
         String value = mFileName;
+
+        if (uri == null){
+            Toast.makeText(this, "Unable to open the Specified file", Toast.LENGTH_LONG).show();
+            return;
+        }
 
         if (!value.isEmpty()) {
             if (isExternalStorageWritable()) {
@@ -616,7 +708,11 @@ public class MainActivity extends AppCompatActivity {
                                     Log.v("scan complete", path);
                                 }
                             });*/
-                } catch (SQLiteException e) {
+                }catch (NullPointerException npe){
+                    npe.printStackTrace();
+                    Toast.makeText(this, "Error in opening the Specified file", Toast.LENGTH_LONG).show();
+                }
+                catch (SQLiteException e) {
                     e.printStackTrace();
                     Toast.makeText(MainActivity.this, "Error exporting file, is your table empty?", Toast.LENGTH_SHORT).show();
                 } catch (FileNotFoundException e) {
@@ -884,8 +980,12 @@ public class MainActivity extends AppCompatActivity {
         if (itemId == R.id.nav_import){
             final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
             final int scanMode = Integer.valueOf(sharedPref.getString(SettingsActivity.SCAN_MODE_LIST, "-1"));
-
-            final Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            final Intent i;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+            }else{
+                i = new Intent(Intent.ACTION_GET_CONTENT);
+            }
             i.setType("*/*");
             startActivityForResult(Intent.createChooser(i, "Choose file to import."), VerifyConstants.DEFAULT_CONTENT_REQ);
         } else if (itemId == R.id.nav_settings) {
@@ -1045,7 +1145,9 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         if (externalWriteAccept && isExternalStorageWritable()) {
+
             File verifyDirectory = new File(getExternalFilesDir(null), "/Verify");
+
             if (!verifyDirectory.isDirectory()) {
                 final boolean makeDirsSuccess = verifyDirectory.mkdirs();
                 if (!makeDirsSuccess) Log.d("Verify Make Directory", "failed");
