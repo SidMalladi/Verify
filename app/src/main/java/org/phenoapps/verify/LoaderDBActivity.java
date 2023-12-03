@@ -6,8 +6,8 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
-import android.support.v7.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.appcompat.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -95,7 +95,11 @@ public class LoaderDBActivity extends AppCompatActivity {
 
         mFileUri = getIntent().getData();
 
-        assert mFileUri != null;
+        if (mFileUri == null ){
+            Toast.makeText(this, "There was a problem reading this file", Toast.LENGTH_LONG).show();
+            return;
+        }
+
         int lastSlash = Objects.requireNonNull(mFileUri.getPath()).lastIndexOf('/');
         if (lastSlash != -1) {
             mFileName = mFileUri.getPath().substring(lastSlash + 1);
@@ -127,8 +131,7 @@ public class LoaderDBActivity extends AppCompatActivity {
         try {
             //query file path type
 //            mFilePath = getPath(LoaderDBActivity.this ,mFileUri);
-            UriHandler uriWorker = new UriHandler();
-            String mFilePath = uriWorker.getPath(LoaderDBActivity.this, mFileUri);
+            String mFilePath = UriHandler.getPath(LoaderDBActivity.this, mFileUri);
             int lastDot = mFilePath.lastIndexOf("."); // changed from mFileUri to mFilePath due to the files in download folder have URI without extension
 
             if (lastDot == -1) {

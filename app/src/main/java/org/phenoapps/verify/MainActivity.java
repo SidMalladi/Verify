@@ -1,6 +1,5 @@
 package org.phenoapps.verify;
 
-import android.Manifest;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -12,22 +11,20 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteStatement;
 import android.media.MediaPlayer;
 import android.media.MediaScannerConnection;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcelable;
+import android.os.storage.StorageManager;
 import android.preference.PreferenceManager;
-import android.provider.MediaStore;
-import android.support.annotation.NonNull;
-import android.support.design.widget.NavigationView;
-import android.support.v4.app.ActivityCompat;
-import android.support.v4.view.GravityCompat;
-import android.support.v4.widget.DrawerLayout;
-import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
+
+import androidx.annotation.NonNull;
+import com.google.android.material.navigation.NavigationView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.view.GravityCompat;
+import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.appcompat.app.ActionBarDrawerToggle;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.InputType;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
@@ -41,9 +38,9 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
-import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,10 +55,6 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.phenoapps.verify.R;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -564,29 +557,28 @@ public class MainActivity extends AppCompatActivity {
         int lastDot = mFileName.lastIndexOf('.');
         if (lastDot != -1) {
             mFileName = mFileName.substring(0, lastDot);
-
         }
-        input.setText(mFileName + "_" + sdf.format(c.getTime()));
+        input.setText("Verify_"+ sdf.format(c.getTime()));
         input.setInputType(InputType.TYPE_CLASS_TEXT);
         builder.setView(input);
 
-        builder.setPositiveButton("Export", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialogInterface, int which) {
-                String value = input.getText().toString();
-                mFileName = value;
-                final Intent i;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                    i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-                    i.setType("*/*");
-                    i.putExtra(Intent.EXTRA_TITLE, value+".csv");
-                    startActivityForResult(Intent.createChooser(i, "Choose folder to export file."), VerifyConstants.PICK_CUSTOM_DEST);
-                }else{
-                    writeToExportPath();
-                }
-            }
-        });
-        builder.show();
+       builder.setPositiveButton("Export", new DialogInterface.OnClickListener() {
+           @Override
+           public void onClick(DialogInterface dialogInterface, int which) {
+               String value = input.getText().toString();
+               mFileName = value;
+               final Intent i;
+               if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                   i = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+                   i.setType("*/*");
+                   i.putExtra(Intent.EXTRA_TITLE, value+".csv");
+                   startActivityForResult(Intent.createChooser(i, "Choose folder to export file."), VerifyConstants.PICK_CUSTOM_DEST);
+               }else{
+                   writeToExportPath();
+               }
+           }
+       });
+       builder.show();
     }
 
     public void writeToExportPath(){
@@ -981,13 +973,53 @@ public class MainActivity extends AppCompatActivity {
             final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
             final int scanMode = Integer.valueOf(sharedPref.getString(SettingsActivity.SCAN_MODE_LIST, "-1"));
             final Intent i;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-            }else{
-                i = new Intent(Intent.ACTION_GET_CONTENT);
-            }
-            i.setType("*/*");
-            startActivityForResult(Intent.createChooser(i, "Choose file to import."), VerifyConstants.DEFAULT_CONTENT_REQ);
+            File verifyDirectory = new File(getExternalFilesDir(null), "/Verify");
+
+            File[] files = verifyDirectory.listFiles();
+
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Select files from?");
+            builder.setPositiveButton("Storage",
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+                            Intent i;
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                            }else{
+                                i = new Intent(Intent.ACTION_GET_CONTENT);
+                            }
+                            i.setType("*/*");
+                            startActivityForResult(Intent.createChooser(i, "Choose file to import."), VerifyConstants.DEFAULT_CONTENT_REQ);
+                        }
+                    });
+
+            builder.setNegativeButton("Verify Directory",
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+
+                            AlertDialog.Builder fileBuilder = new AlertDialog.Builder(MainActivity.this);
+                            fileBuilder.setTitle("Select the sample file");
+                            final int[] checkedItem = {-1};
+                            String[] listItems = verifyDirectory.list();
+                            fileBuilder.setSingleChoiceItems(listItems, checkedItem[0],(fileDialog, which) -> {
+                                checkedItem[0] = which;
+
+                                Intent i = new Intent(MainActivity.this, LoaderDBActivity.class);
+                                i.setData(Uri.fromFile(files[which]));
+                                startActivityForResult(i, VerifyConstants.LOADER_INTENT_REQ);
+                                fileDialog.dismiss();
+                            });
+
+                            fileBuilder.show();
+
+                        }
+                    });
+            builder.show();
         } else if (itemId == R.id.nav_settings) {
             final Intent settingsIntent = new Intent(this, SettingsActivity.class);
             startActivityForResult(settingsIntent, VerifyConstants.SETTINGS_INTENT_REQ);
@@ -1108,14 +1140,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
 
-                //  Launch app intro
-                final Intent i = new Intent(MainActivity.this, IntroActivity.class);
+            //  Launch app intro
+            final Intent i = new Intent(MainActivity.this, IntroActivity.class);
 
-                runOnUiThread(new Runnable() {
-                    @Override public void run() {
-                        startActivity(i);
-                    }
-                });
+            runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    startActivity(i);
+                }
+            });
 
 
             }
@@ -1136,6 +1168,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int resultCode, String[] permissions, int[] granted) {
 
+        super.onRequestPermissionsResult(resultCode, permissions, granted);
         boolean externalWriteAccept = false;
         if (resultCode == VerifyConstants.PERM_REQ) {
             for (int i = 0; i < permissions.length; i++) {
