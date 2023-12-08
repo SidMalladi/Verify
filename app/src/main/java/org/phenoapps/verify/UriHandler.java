@@ -8,9 +8,10 @@ import android.os.Build;
 import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.OpenableColumns;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -18,10 +19,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+
+
+
 public class UriHandler {
 
-
-    public String getFileName(@NonNull Context context, Uri uri) {
+    /**
+     * Resolve the file name from the content Uri.
+     * @param context
+     * @param uri
+     * @return
+     */
+    public static String getFileName(@NonNull Context context, Uri uri) {
         String mimeType = context.getContentResolver().getType(uri);
         String fileName = null;
 
@@ -47,7 +56,12 @@ public class UriHandler {
         return fileName;
     }
 
-    public String getName(String fileName) {
+    /**
+     * Returns the effective file name from the provided Uri.
+     * @param fileName
+     * @return
+     */
+    public static String getName(String fileName) {
         if (fileName == null) {
             return null;
         }
@@ -55,7 +69,12 @@ public class UriHandler {
         return fileName.substring(index + 1);
     }
 
-    public File getDocumentCacheDir(@NonNull Context context) {
+    /**
+     * Returns the documents directory in the storage.
+     * @param context
+     * @return
+     */
+    public static File getDocumentCacheDir(@NonNull Context context) {
         File dir = new File(context.getCacheDir(), "documents");
         if (!dir.exists()) {
             dir.mkdirs();
@@ -63,7 +82,13 @@ public class UriHandler {
         return dir;
     }
 
-    public File generateFileName(@Nullable String name, File directory) {
+    /**
+     * Generates new file in the specified cached directory.
+     * @param name
+     * @param directory
+     * @return
+     */
+    public static File generateFileName(@Nullable String name, File directory) {
         if (name == null) {
             return null;
         }
@@ -99,7 +124,14 @@ public class UriHandler {
         return file;
     }
 
-    private void saveFileFromUri(Context context, Uri uri, String destinationPath) {
+    /**
+     * creates a locally cached file for content from any cloud provider.
+     * @param context
+     * @param uri
+     * @param destinationPath
+     */
+
+    private static void saveFileFromUri(Context context, Uri uri, String destinationPath) {
         InputStream uriInputStream = null;
         BufferedOutputStream bufferStream = null;
         try {
@@ -122,11 +154,11 @@ public class UriHandler {
         }
     }
 
-    private String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
+    private static String getDataColumn(Context context, Uri uri, String selection, String[] selectionArgs) {
 
         Cursor cursor = null;
         final String column = "_data";
-        final String[] projection = { column };
+        final String[] projection = {column};
         try {
             cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs, null);
             if (cursor != null && cursor.moveToFirst()) {
@@ -140,13 +172,19 @@ public class UriHandler {
         return null;
     }
 
-    public String getLocalPath(final Context context , Uri uri) {
+    /**
+     * The utility method helps to resolve the local path of a file from a content Uri.
+     * @param context
+     * @param uri
+     * @return
+     */
+    public static String getLocalPath(final Context context, Uri uri) {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             if (DocumentsContract.isDocumentUri(context, uri)) {
 
                 if ("com.android.externalstorage.documents".equals(uri.getAuthority())) {
-                    final String[] doc =  DocumentsContract.getDocumentId(uri).split(":");
+                    final String[] doc = DocumentsContract.getDocumentId(uri).split(":");
                     final String documentType = doc[0];
 
                     if ("primary".equalsIgnoreCase(documentType)) {
@@ -184,7 +222,8 @@ public class UriHandler {
                             if (path != null) {
                                 return path;
                             }
-                        } catch (Exception e) {}
+                        } catch (Exception e) {
+                        }
                     }
 
                     String fileName = getFileName(context, uri);
@@ -197,8 +236,7 @@ public class UriHandler {
                     }
                     return destinationPath;
                 }
-            }
-            else if ("file".equalsIgnoreCase(uri.getScheme())) {
+            } else if ("file".equalsIgnoreCase(uri.getScheme())) {
                 return uri.getPath();
             } else if ("com.estrongs.files".equals(uri.getAuthority())) {
                 return uri.getPath();
@@ -210,7 +248,13 @@ public class UriHandler {
 
 //  All the class methods implemented in reference to https://github.com/coltoscosmin/FileUtils/blob/master/FileUtils.java#L290
 
-    public String getPath(final Context context, final Uri uri){
+    /**
+     *
+     * @param context the context from which the utility method is called in
+     * @param uri uri of the file to access
+     * @return path of the file to be accessed
+     */
+    public static String getPath(final Context context, final Uri uri) {
         String absolutePath = getLocalPath(context, uri);
         return absolutePath != null ? absolutePath : uri.toString();
     }
