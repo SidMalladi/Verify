@@ -102,6 +102,7 @@
             android:weightSum="2"
             app:layout_constraintBottom_toBottomOf="@+id/linearLayout">
 
+<<<<<<< HEAD
             <androidx.appcompat.widget.ActionMenuView
                 android:id="@+id/bottom_toolbar"
                 android:layout_weight="1.5"
@@ -115,4 +116,16 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+=======
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nvView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/nav_drawer_view" />
+>>>>>>> 0ca52f1acdd5a0fc123028ca7c17735ef0676d45
 </androidx.drawerlayout.widget.DrawerLayout>

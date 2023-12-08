@@ -19,9 +19,12 @@ import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import com.google.android.material.navigation.NavigationView;
+<<<<<<< HEAD
 
 import androidx.appcompat.widget.ActionMenuView;
 import androidx.appcompat.widget.Toolbar;
+=======
+>>>>>>> 0ca52f1acdd5a0fc123028ca7c17735ef0676d45
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -993,7 +996,119 @@ final ArrayAdapter<String> adapter =
 new ArrayAdapter<>(this, org.phenoapps.verify.R.layout.row);
 
         idTable.setAdapter(adapter);
+<<<<<<< HEAD
 adapter.notifyDataSetChanged();
+=======
+        adapter.notifyDataSetChanged();
+    }
+
+    private void setupDrawer() {
+
+        DrawerLayout dl = (DrawerLayout) findViewById(org.phenoapps.verify.R.id.drawer_layout);
+        mDrawerToggle = new ActionBarDrawerToggle(this, dl,
+                org.phenoapps.verify.R.string.drawer_open, org.phenoapps.verify.R.string.drawer_close) {
+
+            public void onDrawerOpened(View drawerView) {
+                View view = MainActivity.this.getCurrentFocus();
+                if (view != null) {
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                }
+            }
+
+            public void onDrawerClosed(View view) {
+            }
+
+        };
+
+        mDrawerToggle.setDrawerIndicatorEnabled(true);
+        dl.addDrawerListener(mDrawerToggle);
+    }
+
+    private void setupDrawerContent(NavigationView navigationView) {
+        navigationView.setNavigationItemSelectedListener(
+                new NavigationView.OnNavigationItemSelectedListener() {
+                    @Override
+                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                        selectDrawerItem(menuItem);
+                        return true;
+                    }
+                });
+    }
+
+    private void selectDrawerItem(MenuItem menuItem) {
+        int itemId = menuItem.getItemId();
+        // constants like id in R class are no longer final, thus can't use switch here
+
+        if (itemId == R.id.nav_import){
+            final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+            final int scanMode = Integer.valueOf(sharedPref.getString(SettingsActivity.SCAN_MODE_LIST, "-1"));
+            final Intent i;
+            File verifyDirectory = new File(getExternalFilesDir(null), "/Verify");
+
+            File[] files = verifyDirectory.listFiles();
+
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Select files from?");
+            builder.setPositiveButton("Storage",
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+                            Intent i;
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                            }else{
+                                i = new Intent(Intent.ACTION_GET_CONTENT);
+                            }
+                            i.setType("*/*");
+                            startActivityForResult(Intent.createChooser(i, "Choose file to import."), VerifyConstants.DEFAULT_CONTENT_REQ);
+                        }
+                    });
+
+            builder.setNegativeButton("Verify Directory",
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+
+                            AlertDialog.Builder fileBuilder = new AlertDialog.Builder(MainActivity.this);
+                            fileBuilder.setTitle("Select the sample file");
+                            final int[] checkedItem = {-1};
+                            String[] listItems = verifyDirectory.list();
+                            fileBuilder.setSingleChoiceItems(listItems, checkedItem[0],(fileDialog, which) -> {
+                                checkedItem[0] = which;
+
+                                Intent i = new Intent(MainActivity.this, LoaderDBActivity.class);
+                                i.setData(Uri.fromFile(files[which]));
+                                startActivityForResult(i, VerifyConstants.LOADER_INTENT_REQ);
+                                fileDialog.dismiss();
+                            });
+
+                            fileBuilder.show();
+
+                        }
+                    });
+            builder.show();
+        } else if (itemId == R.id.nav_settings) {
+            final Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivityForResult(settingsIntent, VerifyConstants.SETTINGS_INTENT_REQ);
+        } else if (itemId == R.id.nav_export) {
+            askUserExportFileName();
+        } else if (itemId == R.id.nav_about) {
+            showAboutDialog();
+        } else if (itemId == R.id.nav_intro) {
+            final Intent intro_intent = new Intent(MainActivity.this, IntroActivity.class);
+            runOnUiThread(new Runnable() {
+                @Override public void run() {
+                    startActivity(intro_intent);
+                }
+            });
+        }
+        DrawerLayout dl = (DrawerLayout) findViewById(org.phenoapps.verify.R.id.drawer_layout);
+        dl.closeDrawers();
+>>>>>>> 0ca52f1acdd5a0fc123028ca7c17735ef0676d45
     }
 
     private void showPairDialog() {
