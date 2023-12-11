@@ -15,7 +15,7 @@
             android:id="@+id/idTable"
             android:layout_width="0dp"
             android:layout_height="200dp"
-                        android:visibility="visible"
+            android:visibility="visible"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
@@ -88,46 +88,36 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
-           <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-               android:id="@+id/auxScrollView"
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               android:layout_weight="0.5"
-               android:fillViewport="true"
-               android:visibility="visible"
-               app:layout_constraintEnd_toEndOf="parent"
-               app:layout_constraintStart_toStartOf="parent"
-               app:layout_constraintTop_toTopOf="@+id/scrollView">
+            <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/auxScrollView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.5"
+                android:fillViewport="true"
+                android:visibility="visible"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/scrollView">
 
-               <TextView
-               android:id="@+id/auxValueView"
-               style="@style/Base.TextAppearance.AppCompat.Title"
-               android:layout_width="match_parent"
-               android:layout_height="wrap_content"
-               android:visibility="visible" />
+                <TextView
+                    android:id="@+id/auxValueView"
+                    style="@style/Base.TextAppearance.AppCompat.Title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="visible" />
 
-           </ScrollView>
+            </ScrollView>
         </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:gravity="center"
-            android:weightSum="2"
-            app:layout_constraintBottom_toBottomOf="@+id/linearLayout">
-
-            <androidx.appcompat.widget.ActionMenuView
-                android:id="@+id/bottom_toolbar"
-                android:layout_weight="1.5"
-                android:layout_width="0dp"
-                android:layout_height="?attr/actionBarSize"
-                android:gravity="center"
-                android:elevation="4dp"
-                android:foregroundGravity="center"
-                />
-        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nvView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/nav_drawer_view" />
 </androidx.drawerlayout.widget.DrawerLayout>

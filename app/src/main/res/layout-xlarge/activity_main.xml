@@ -94,25 +94,15 @@
 
             </ScrollView>
         </LinearLayout>
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
-            android:background="?attr/colorPrimary"
-            android:gravity="center"
-            android:weightSum="2"
-            app:layout_constraintBottom_toBottomOf="@+id/linearLayout">
-
-            <androidx.appcompat.widget.ActionMenuView
-                android:id="@+id/bottom_toolbar"
-                android:layout_weight="1.5"
-                android:layout_width="0dp"
-                android:layout_height="?attr/actionBarSize"
-                android:gravity="center"
-                android:elevation="4dp"
-                android:foregroundGravity="center"
-                />
-        </LinearLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <com.google.android.material.navigation.NavigationView
+        android:id="@+id/nvView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_gravity="start"
+        android:background="@android:color/white"
+        app:headerLayout="@layout/nav_header"
+        app:menu="@menu/nav_drawer_view" />
 </androidx.drawerlayout.widget.DrawerLayout>
