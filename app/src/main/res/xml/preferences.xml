@@ -36,4 +36,13 @@
         android:key="org.phenoapps.verify.TUTORIAL_MODE"
         android:summary="Always display the tutorial when Verify is opened."
         android:title="Tutorial" />
+    <Preference
+        android:icon="@drawable/ic_help"
+        android:key="org.phenoapps.verify.INTRO"
+        android:title="Intro" />
+    <Preference
+        android:icon="@drawable/ic_about"
+        android:key="org.phenoapps.verify.ABOUT"
+        android:summary=""
+        android:title="About" />
 </PreferenceScreen>

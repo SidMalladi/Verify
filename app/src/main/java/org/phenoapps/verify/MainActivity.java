@@ -19,6 +19,9 @@ import android.preference.PreferenceManager;
 
 import androidx.annotation.NonNull;
 import com.google.android.material.navigation.NavigationView;
+
+import androidx.appcompat.widget.ActionMenuView;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
@@ -34,6 +37,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
@@ -72,9 +76,6 @@ public class MainActivity extends AppCompatActivity {
 
     private SparseArray<String> mIds;
 
-    //Verify UI variables
-    private ActionBarDrawerToggle mDrawerToggle;
-
     //global variable to track matching order
     private int mMatchingOrder;
 
@@ -85,6 +86,8 @@ public class MainActivity extends AppCompatActivity {
     private String mNextPairVal;
 
     private String mFileName = "";
+
+    private Toolbar navigationToolBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -97,29 +100,29 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        final View auxInfo = findViewById(R.id.auxScrollView);
-        final View auxValue = findViewById(R.id.auxValueView);
+final View auxInfo = findViewById(R.id.auxScrollView);
+final View auxValue = findViewById(R.id.auxValueView);
 
         if (sharedPref.getBoolean(SettingsActivity.AUX_INFO, false)) {
-            auxInfo.setVisibility(View.VISIBLE);
-            auxValue.setVisibility(View.VISIBLE);
+auxInfo.setVisibility(View.VISIBLE);
+auxValue.setVisibility(View.VISIBLE);
 
         } else {
-            auxInfo.setVisibility(View.GONE);
-            auxValue.setVisibility(View.GONE);
-        }
+auxInfo.setVisibility(View.GONE);
+auxValue.setVisibility(View.GONE);
+}
 
         mPrefListener = new SharedPreferences.OnSharedPreferenceChangeListener() {
             @Override
             public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String s) {
 
-                if (sharedPreferences.getBoolean(SettingsActivity.AUX_INFO, false)) {
-                    auxInfo.setVisibility(View.VISIBLE);
-                    auxValue.setVisibility(View.VISIBLE);
-                } else {
-                    auxInfo.setVisibility(View.GONE);
-                    auxValue.setVisibility(View.GONE);
-                }
+if (sharedPreferences.getBoolean(SettingsActivity.AUX_INFO, false)) {
+auxInfo.setVisibility(View.VISIBLE);
+auxValue.setVisibility(View.VISIBLE);
+} else {
+auxInfo.setVisibility(View.GONE);
+auxValue.setVisibility(View.GONE);
+}
             }
         };
 
@@ -208,17 +211,10 @@ public class MainActivity extends AppCompatActivity {
     private void initializeUIVariables() {
 
         if (getSupportActionBar() != null){
-            getSupportActionBar().setTitle(null);
+            getSupportActionBar().setTitle("CheckList");
             getSupportActionBar().getThemedContext();
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             getSupportActionBar().setHomeButtonEnabled(true);
         }
-
-        final NavigationView nvDrawer = (NavigationView) findViewById(R.id.nvView);
-
-        // Setup drawer view
-        setupDrawerContent(nvDrawer);
-        setupDrawer();
 
         final EditText scannerTextView = ((EditText) findViewById(R.id.scannerTextView));
         scannerTextView.setSelectAllOnFocus(true);
@@ -237,25 +233,25 @@ public class MainActivity extends AppCompatActivity {
 
         ListView idTable = ((ListView) findViewById(R.id.idTable));
         idTable.setChoiceMode(AbsListView.CHOICE_MODE_MULTIPLE);
-        idTable.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+idTable.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                scannerTextView.setText(((TextView) view).getText().toString());
+scannerTextView.setText(((TextView) view).getText().toString());
                 scannerTextView.setSelection(scannerTextView.getText().length());
                 scannerTextView.requestFocus();
                 scannerTextView.selectAll();
                 checkScannedItem();
-            }
+                }
         });
 
-        idTable.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                //get app settings
-                insertNoteIntoDb(((TextView) view).getText().toString());
-                return true;
-            }
+idTable.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+@Override
+public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+//get app settings
+insertNoteIntoDb(((TextView) view).getText().toString());
+return true;
+}
         });
 
         TextView valueView = (TextView) findViewById(R.id.valueView);
@@ -273,7 +269,7 @@ public class MainActivity extends AppCompatActivity {
 
         SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
         int scanMode = Integer.valueOf(sharedPref.getString(SettingsActivity.SCAN_MODE_LIST, "-1"));
-        boolean displayAux = sharedPref.getBoolean(SettingsActivity.AUX_INFO, true);
+boolean displayAux = sharedPref.getBoolean(SettingsActivity.AUX_INFO, true);
 
         String scannedId = ((EditText) findViewById(org.phenoapps.verify.R.id.scannerTextView))
                 .getText().toString();
@@ -318,10 +314,10 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 }
-                cursor.close();
-                ((TextView) findViewById(org.phenoapps.verify.R.id.valueView)).setText(values.toString());
-                ((TextView) findViewById(R.id.auxValueView)).setText(auxValues.toString());
-                ((EditText) findViewById(R.id.scannerTextView)).setText("");
+                                cursor.close();
+((TextView) findViewById(org.phenoapps.verify.R.id.valueView)).setText(values.toString());
+((TextView) findViewById(R.id.auxValueView)).setText(auxValues.toString());
+((EditText) findViewById(R.id.scannerTextView)).setText("");
             } else {
                 if (scanMode != 2) {
                     ringNotification(false);
@@ -808,6 +804,19 @@ public class MainActivity extends AppCompatActivity {
 
         final MenuInflater inflater = getMenuInflater();
         inflater.inflate(org.phenoapps.verify.R.menu.activity_main_toolbar, m);
+
+        ActionMenuView bottomToolBar = (ActionMenuView) findViewById(R.id.bottom_toolbar);
+        Menu bottomMenu = bottomToolBar.getMenu();
+        inflater.inflate(R.menu.activity_main_bottom_toolbar, bottomMenu);
+
+        for (int i = 0; i < bottomMenu.size(); i++) {
+            bottomMenu.getItem(i).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+                @Override
+                public boolean onMenuItemClick(MenuItem item) {
+                    return onOptionsItemSelected(item);
+                }
+            });
+        }
         return true;
     }
 
@@ -815,25 +824,81 @@ public class MainActivity extends AppCompatActivity {
     final public boolean onOptionsItemSelected(MenuItem item) {
         DrawerLayout dl = (DrawerLayout) findViewById(R.id.drawer_layout);
         int actionCamera = R.id.action_camera;
-        int actionCompare = R.id.action_compare;
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-            return true;
-        }
+        int actionImport = R.id.action_import;
+        int actionHome = R.id.Home;
+        int actionCompare = R.id.Compare;
+        int actionSettings = R.id.Settings;
 
-        if (item.getItemId() == android.R.id.home){
+        if (item.getItemId() == actionImport){
+            final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
+            final int scanMode = Integer.valueOf(sharedPref.getString(SettingsActivity.SCAN_MODE_LIST, "-1"));
+            final Intent i;
+            File verifyDirectory = new File(getExternalFilesDir(null), "/Verify");
+
+            File[] files = verifyDirectory.listFiles();
+
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Select files from?");
+            builder.setPositiveButton("Storage",
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+                            Intent i;
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
+                                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                            }else{
+                                i = new Intent(Intent.ACTION_GET_CONTENT);
+                            }
+                            i.setType("*/*");
+                            startActivityForResult(Intent.createChooser(i, "Choose file to import."), VerifyConstants.DEFAULT_CONTENT_REQ);
+                        }
+                    });
+
+            builder.setNegativeButton("Verify Directory",
+                    new DialogInterface.OnClickListener()
+                    {
+                        public void onClick(DialogInterface dialog, int id)
+                        {
+
+                            AlertDialog.Builder fileBuilder = new AlertDialog.Builder(MainActivity.this);
+                            fileBuilder.setTitle("Select the sample file");
+                            final int[] checkedItem = {-1};
+                            String[] listItems = verifyDirectory.list();
+                            fileBuilder.setSingleChoiceItems(listItems, checkedItem[0],(fileDialog, which) -> {
+                                checkedItem[0] = which;
+
+                                Intent i = new Intent(MainActivity.this, LoaderDBActivity.class);
+                                i.setData(Uri.fromFile(files[which]));
+                                startActivityForResult(i, VerifyConstants.LOADER_INTENT_REQ);
+                                fileDialog.dismiss();
+                            });
+
+                            fileBuilder.show();
+
+                        }
+                    });
+            builder.show();
+        } else if (item.getItemId() == android.R.id.home){
             dl.openDrawer(GravityCompat.START);
         }
-        else if(item.getItemId() == actionCamera){
-            final Intent cameraIntent = new Intent(this, ScanActivity.class);
-            startActivityForResult(cameraIntent, VerifyConstants.CAMERA_INTENT_REQ);
+        else if (item.getItemId() == actionHome){
+
         }
-        else if(item.getItemId() == actionCompare){
+        else if ( item.getItemId() == actionCompare) {
             final Intent compareIntent = new Intent(MainActivity.this, CompareActivity.class);
             runOnUiThread(new Runnable() {
                 @Override public void run() {
                     startActivity(compareIntent);
                 }
             });
+        } else if (item.getItemId() == actionSettings) {
+            final Intent settingsIntent = new Intent(this, SettingsActivity.class);
+            startActivityForResult(settingsIntent, VerifyConstants.SETTINGS_INTENT_REQ);
+        } else if(item.getItemId() == actionCamera){
+            final Intent cameraIntent = new Intent(this, ScanActivity.class);
+            startActivityForResult(cameraIntent, VerifyConstants.CAMERA_INTENT_REQ);
         }
         else{
             return super.onOptionsItemSelected(item);
@@ -912,131 +977,23 @@ public class MainActivity extends AppCompatActivity {
     private void buildListView() {
 
         ListView idTable = (ListView) findViewById(org.phenoapps.verify.R.id.idTable);
-        ArrayAdapter<String> idAdapter =
-                new ArrayAdapter<>(this, org.phenoapps.verify.R.layout.row);
+ArrayAdapter<String> idAdapter =
+new ArrayAdapter<>(this, org.phenoapps.verify.R.layout.row);
         int size = mIds.size();
         for (int i = 0; i < size; i++) {
-            idAdapter.add(this.mIds.get(this.mIds.keyAt(i)));
+idAdapter.add(this.mIds.get(this.mIds.keyAt(i)));
         }
-        idTable.setAdapter(idAdapter);
+idTable.setAdapter(idAdapter);
     }
 
     private void clearListView() {
 
         ListView idTable = (ListView) findViewById(org.phenoapps.verify.R.id.idTable);
-        final ArrayAdapter<String> adapter =
-                new ArrayAdapter<>(this, org.phenoapps.verify.R.layout.row);
+final ArrayAdapter<String> adapter =
+new ArrayAdapter<>(this, org.phenoapps.verify.R.layout.row);
 
         idTable.setAdapter(adapter);
-        adapter.notifyDataSetChanged();
-    }
-
-    private void setupDrawer() {
-
-        DrawerLayout dl = (DrawerLayout) findViewById(org.phenoapps.verify.R.id.drawer_layout);
-        mDrawerToggle = new ActionBarDrawerToggle(this, dl,
-                org.phenoapps.verify.R.string.drawer_open, org.phenoapps.verify.R.string.drawer_close) {
-
-            public void onDrawerOpened(View drawerView) {
-                View view = MainActivity.this.getCurrentFocus();
-                if (view != null) {
-                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-                }
-            }
-
-            public void onDrawerClosed(View view) {
-            }
-
-        };
-
-        mDrawerToggle.setDrawerIndicatorEnabled(true);
-        dl.addDrawerListener(mDrawerToggle);
-    }
-
-    private void setupDrawerContent(NavigationView navigationView) {
-        navigationView.setNavigationItemSelectedListener(
-                new NavigationView.OnNavigationItemSelectedListener() {
-                    @Override
-                    public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                        selectDrawerItem(menuItem);
-                        return true;
-                    }
-                });
-    }
-
-    private void selectDrawerItem(MenuItem menuItem) {
-        int itemId = menuItem.getItemId();
-        // constants like id in R class are no longer final, thus can't use switch here
-
-        if (itemId == R.id.nav_import){
-            final SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(MainActivity.this);
-            final int scanMode = Integer.valueOf(sharedPref.getString(SettingsActivity.SCAN_MODE_LIST, "-1"));
-            final Intent i;
-            File verifyDirectory = new File(getExternalFilesDir(null), "/Verify");
-
-            File[] files = verifyDirectory.listFiles();
-
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle("Select files from?");
-            builder.setPositiveButton("Storage",
-                    new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog, int id)
-                        {
-                            Intent i;
-                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.KITKAT) {
-                                i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-                            }else{
-                                i = new Intent(Intent.ACTION_GET_CONTENT);
-                            }
-                            i.setType("*/*");
-                            startActivityForResult(Intent.createChooser(i, "Choose file to import."), VerifyConstants.DEFAULT_CONTENT_REQ);
-                        }
-                    });
-
-            builder.setNegativeButton("Verify Directory",
-                    new DialogInterface.OnClickListener()
-                    {
-                        public void onClick(DialogInterface dialog, int id)
-                        {
-
-                            AlertDialog.Builder fileBuilder = new AlertDialog.Builder(MainActivity.this);
-                            fileBuilder.setTitle("Select the sample file");
-                            final int[] checkedItem = {-1};
-                            String[] listItems = verifyDirectory.list();
-                            fileBuilder.setSingleChoiceItems(listItems, checkedItem[0],(fileDialog, which) -> {
-                                checkedItem[0] = which;
-
-                                Intent i = new Intent(MainActivity.this, LoaderDBActivity.class);
-                                i.setData(Uri.fromFile(files[which]));
-                                startActivityForResult(i, VerifyConstants.LOADER_INTENT_REQ);
-                                fileDialog.dismiss();
-                            });
-
-                            fileBuilder.show();
-
-                        }
-                    });
-            builder.show();
-        } else if (itemId == R.id.nav_settings) {
-            final Intent settingsIntent = new Intent(this, SettingsActivity.class);
-            startActivityForResult(settingsIntent, VerifyConstants.SETTINGS_INTENT_REQ);
-        } else if (itemId == R.id.nav_export) {
-            askUserExportFileName();
-        } else if (itemId == R.id.nav_about) {
-            showAboutDialog();
-        } else if (itemId == R.id.nav_intro) {
-            final Intent intro_intent = new Intent(MainActivity.this, IntroActivity.class);
-            runOnUiThread(new Runnable() {
-                @Override public void run() {
-                    startActivity(intro_intent);
-                }
-            });
-        }
-        DrawerLayout dl = (DrawerLayout) findViewById(org.phenoapps.verify.R.id.drawer_layout);
-        dl.closeDrawers();
+adapter.notifyDataSetChanged();
     }
 
     private void showPairDialog() {
@@ -1065,73 +1022,14 @@ public class MainActivity extends AppCompatActivity {
         builder.show();
     }
 
-    private void showAboutDialog()
-    {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
-        {
-            android.view.View personView = this.getLayoutInflater().inflate(
-                    org.phenoapps.verify.R.layout.about, new android.widget.LinearLayout(this),
-                    false);
-
-            {
-                assert personView != null;
-                android.widget.TextView versionTextView = (android.widget.TextView)
-                        personView.findViewById(org.phenoapps.verify.R.id.tvVersion);
-                try
-                {
-                    android.content.pm.PackageInfo packageInfo =
-                            this.getPackageManager().getPackageInfo(this.getPackageName(), 0);
-                    assert packageInfo     != null;
-                    assert versionTextView != null;
-                    versionTextView.setText(this.getResources().getString(
-                            org.phenoapps.verify.R.string.versiontitle) +
-                            ' ' + packageInfo.versionName);
-                }
-                catch (android.content.pm.PackageManager.NameNotFoundException e)
-                { e.printStackTrace(); }
-                versionTextView.setOnClickListener(new android.view.View.OnClickListener()
-                {
-                    @java.lang.Override
-                    public void onClick(android.view.View v)
-                    { MainActivity.this.showChangeLog(); }
-                });
-            }
-
-            builder.setCancelable(true);
-            builder.setTitle     (this.getResources().getString(
-                    org.phenoapps.verify.R.string.about));
-            builder.setView(personView);
-        }
-
-        builder.setNegativeButton(
-                this.getResources().getString(org.phenoapps.verify.R.string.ok),
-                new android.content.DialogInterface.OnClickListener()
-                {
-                    @java.lang.Override
-                    public void onClick(android.content.DialogInterface dialog, int which)
-                    {
-                        assert dialog != null;
-                        dialog.dismiss();
-                    }
-                });
-
-        builder.show();
-    }
-
-    private void showChangeLog() {
-
-    }
-
     @Override
     final protected void onPostCreate(Bundle savedInstanceState) {
         super.onPostCreate(savedInstanceState);
-        mDrawerToggle.syncState();
     }
 
     @Override
     final public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
     }
 
     private void launchIntro() {
