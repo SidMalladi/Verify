@@ -12,31 +12,38 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
-            android:name="org.phenoapps.verify.MainActivity"
+            android:name=".AboutActivity"
+            android:theme="@style/AppTheme.MaterialAboutActivity"
+            android:exported="true" />
+        <activity
+            android:name=".MainActivity"
             android:configChanges="keyboardHidden|screenSize|keyboard"
-            android:windowSoftInputMode="adjustPan"
-            android:exported="true">
+            android:exported="true"
+            android:windowSoftInputMode="adjustPan">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity android:name=".CompareActivity" android:exported="true"/>
-
         <activity
-            android:name="org.phenoapps.verify.ScanActivity"
-            android:exported="true"/>
-
-        <activity android:name="org.phenoapps.verify.LoaderDBActivity" android:exported="true"
-            android:configChanges="orientation|keyboardHidden|screenSize|keyboard"/>
-
-        <activity android:name="org.phenoapps.verify.SettingsActivity" android:exported="true"/>
-
-        <activity android:name="org.phenoapps.verify.IntroActivity" android:exported="true"
-            android:theme = "@style/AppThemeNoActionBar"/>
+            android:name=".CompareActivity"
+            android:exported="true" />
+        <activity
+            android:name=".ScanActivity"
+            android:exported="true" />
+        <activity
+            android:name=".LoaderDBActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize|keyboard"
+            android:exported="true" />
+        <activity
+            android:name=".SettingsActivity"
+            android:exported="true" />
+        <activity
+            android:name=".IntroActivity"
+            android:exported="true"
+            android:theme="@style/AppThemeNoActionBar" />
     </application>
 
 </manifest>

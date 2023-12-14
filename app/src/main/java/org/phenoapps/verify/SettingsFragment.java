@@ -20,57 +20,10 @@ public class SettingsFragment extends PreferenceFragment {
     }
     private void showAboutDialog(Context ctx)
     {
-        android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(ctx);
-        {
-            android.view.View personView = null;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                personView = getLayoutInflater().inflate(
-                        R.layout.about, new android.widget.LinearLayout(ctx),
-                        false);
-            }
-            {
-                assert personView != null;
-                android.widget.TextView versionTextView = (android.widget.TextView)
-                        personView.findViewById(org.phenoapps.verify.R.id.tvVersion);
-                try
-                {
-                    android.content.pm.PackageInfo packageInfo =
-                            ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), 0);
-                    assert packageInfo     != null;
-                    assert versionTextView != null;
-                    versionTextView.setText(this.getResources().getString(
-                            org.phenoapps.verify.R.string.versiontitle) +
-                            ' ' + packageInfo.versionName);
-                }
-                catch (android.content.pm.PackageManager.NameNotFoundException e)
-                { e.printStackTrace(); }
-                versionTextView.setOnClickListener(new android.view.View.OnClickListener()
-                {
-                    @java.lang.Override
-                    public void onClick(android.view.View v)
-                    { showChangeLog(); }
-                });
-            }
-
-            builder.setCancelable(true);
-            builder.setTitle     (this.getResources().getString(
-                    org.phenoapps.verify.R.string.about));
-            builder.setView(personView);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            Intent i = new Intent(getContext(), AboutActivity.class);
+            startActivity(i);
         }
-
-        builder.setNegativeButton(
-                this.getResources().getString(org.phenoapps.verify.R.string.ok),
-                new android.content.DialogInterface.OnClickListener()
-                {
-                    @java.lang.Override
-                    public void onClick(android.content.DialogInterface dialog, int which)
-                    {
-                        assert dialog != null;
-                        dialog.dismiss();
-                    }
-                });
-
-        builder.show();
     }
 
     @Override
