@@ -2,16 +2,20 @@ package org.phenoapps.verify
 
 import android.app.Activity
 import android.os.Bundle
-import androidx.appcompat.app.AlertDialog
-import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
-import android.util.LayoutDirection
-import android.view.*
-import android.widget.*
-
+import android.view.KeyEvent
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.RadioButton
+import android.widget.RadioGroup
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.ActionMenuView
 import com.google.zxing.ResultPoint
-
 import com.journeyapps.barcodescanner.BarcodeCallback
 import com.journeyapps.barcodescanner.BarcodeResult
 import com.journeyapps.barcodescanner.DecoratedBarcodeView
@@ -179,6 +183,7 @@ class CompareActivity : AppCompatActivity() {
             else -> return super.onOptionsItemSelected(item)
         }
     }
+
 
     override fun onResume() {
         super.onResume()
